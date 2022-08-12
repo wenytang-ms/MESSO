@@ -28,6 +28,8 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity(`The bot encountered an unhandled error:\n ${error.message}`);
   await context.sendActivity("To continue to run this bot, please fix the bot source code.");
 };
+
+// user code.
 adapter.use(new ConsentQueryMiddleware("User.Read"));
 
 // Create the bot that will handle incoming messages.

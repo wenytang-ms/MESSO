@@ -97,12 +97,15 @@ class TeamsBot extends TeamsActivityHandler {
   async handleTeamsMessagingExtensionQuery(context, query) {
     const attachments = [];
     let graphClient = null;
+    // User SSO code.
     try {
       this.teamsfx.setSsoToken(context.activity.value.authentication.token)
       graphClient = createMicrosoftGraphClient(this.teamsfx, "User.Read");
     } catch(err) {
       throw err;
     }
+
+    // User Code, just a sample.
     // if (await this.UserConsentd()) {
     const profile = await graphClient.api('/me').get();
     // show user picture
