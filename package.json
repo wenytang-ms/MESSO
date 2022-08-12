@@ -9,8 +9,5 @@
     "devDependencies": {
         "@microsoft/teamsfx-cli": "1.*"
     },
-    "license": "MIT",
-    "dependencies": {
-        "@microsoft/microsoft-graph-client": "^3.0.2"
-    }
+    "license": "MIT"
 }

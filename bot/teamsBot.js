@@ -12,7 +12,7 @@ class TeamsBot extends TeamsActivityHandler {
   constructor() {
     super();
     this.teamsfx = new TeamsFx();
-    this.graphClient = null;
+    // this.graphClient = null;
     // record the likeCount
     this.likeCountObj = { likeCount: 0 };
 
@@ -125,56 +125,58 @@ class TeamsBot extends TeamsActivityHandler {
   async handleTeamsMessagingExtensionQuery(context, query) {
     const attachments = [];
     console.log('======================= handleTeamsMessagingExtensionQuery entry')
-    if (await this.UserConsentd()) {
-      console.log('============================ handleTeamsMessagingExtensionQuery step 1')
-      const profile = await this.graphClient.api('/me').get();
-      console.log('----------------- ', profile)
-      // show user picture
-      let photoBinary;
-      try {
-        photoBinary = await this.graphClient
-          .api("/me/photo/$value")
-          .responseType(ResponseType.ARRAYBUFFER)
-          .get();
-      } catch (err) {
-        console.log('=============== meet error', err)
-        return;
-      }
-
-      const buffer = Buffer.from(photoBinary);
-      const imageUri = "data:image/png;base64," + buffer.toString("base64");
-      console.log('--------- iamge uri ', imageUri);
-      const thumbnailCard = CardFactory.thumbnailCard(profile.displayName, CardFactory.images([imageUri]));
-      attachments.push(thumbnailCard);
-      return {
-        composeExtension: {
-          type: 'result',
-          attachmentLayout: 'list',
-          attachments: attachments
-        }
-      };
+    this.teamsfx.setSsoToken(context.activity.value.authentication.token)
+    const graphClient = createMicrosoftGraphClient(this.teamsfx, "User.Read");
+    // if (await this.UserConsentd()) {
+    console.log('============================ handleTeamsMessagingExtensionQuery step 1')
+    const profile = await graphClient.api('/me').get();
+    console.log('----------------- ', profile)
+    // show user picture
+    let photoBinary;
+    try {
+      photoBinary = await graphClient
+        .api("/me/photo/$value")
+        .responseType(ResponseType.ARRAYBUFFER)
+        .get();
+    } catch (err) {
+      console.log('=============== meet error', err)
+      return;
     }
 
-    const signInLink = `${this.teamsfx.getConfig("initiateLoginEndpoint")}?scope=${encodeURI(
-      ["User.Read"]
-    )}&clientId=${this.teamsfx.getConfig("clientId")}&tenantId=${this.teamsfx.getConfig(
-      "tenantId"
-    )}`;
-    console.log('==================== ', signInLink);
+    const buffer = Buffer.from(photoBinary);
+    const imageUri = "data:image/png;base64," + buffer.toString("base64");
+    console.log('--------- iamge uri ', imageUri);
+    const thumbnailCard = CardFactory.thumbnailCard(profile.displayName, CardFactory.images([imageUri]));
+    attachments.push(thumbnailCard);
     return {
       composeExtension: {
-        type: 'silentAuth',
-        suggestedActions: {
-          actions: [
-            {
-              type: 'openUrl',
-              value: signInLink,
-              title: 'Bot Service OAuth'
-            }
-          ]
-        }
+        type: 'result',
+        attachmentLayout: 'list',
+        attachments: attachments
       }
-    }
+    };
+    // }
+
+    // const signInLink = `${this.teamsfx.getConfig("initiateLoginEndpoint")}?scope=${encodeURI(
+    //   ["User.Read"]
+    // )}&clientId=${this.teamsfx.getConfig("clientId")}&tenantId=${this.teamsfx.getConfig(
+    //   "tenantId"
+    // )}`;
+    // console.log('==================== ', signInLink);
+    // return {
+    //   composeExtension: {
+    //     type: 'silentAuth',
+    //     suggestedActions: {
+    //       actions: [
+    //         {
+    //           type: 'openUrl',
+    //           value: signInLink,
+    //           title: 'Bot Service OAuth'
+    //         }
+    //       ]
+    //     }
+    //   }
+    // }
   }
 
   async handleTeamsMessagingExtensionSelectItem(context, obj) {
@@ -203,26 +205,27 @@ class TeamsBot extends TeamsActivityHandler {
     return response;
   }
 
-  async onInvokeActivity(context) {
-    const valueObj = context.activity.value;
-    if (valueObj.authentication) {
-      const authObj = valueObj.authentication;
-      if (authObj.token) {
-        const ssoToken = authObj.token;
-        this.teamsfx.setSsoToken(ssoToken);
-        this.graphClient = createMicrosoftGraphClient(this.teamsfx, "User.Read")
-        console.log('123123123')
-        if (await this.UserConsentd()) {
-          return await super.onInvokeActivity(context);
-        } else {
-          return {
-            status: 412
-          }
-        }
-      }
-    }
-    return await super.onInvokeActivity(context)
-  }
+  // async onInvokeActivity(context) {
+  //   console.log('====================== onInvokeActivity')
+  //   const valueObj = context.activity.value;
+  //   if (valueObj.authentication) {
+  //     const authObj = valueObj.authentication;
+  //     if (authObj.token) {
+  //       const ssoToken = authObj.token;
+  //       this.teamsfx.setSsoToken(ssoToken);
+  //       this.graphClient = createMicrosoftGraphClient(this.teamsfx, "User.Read")
+  //       console.log('123123123')
+  //       if (await this.UserConsentd()) {
+  //         return await super.onInvokeActivity(context);
+  //       } else {
+  //         return {
+  //           status: 412
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return await super.onInvokeActivity(context)
+  // }
 }
 
 function createCardCommand(context, action) {

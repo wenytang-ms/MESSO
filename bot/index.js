@@ -7,7 +7,9 @@ const path = require('path')
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
 const { BotFrameworkAdapter } = require("botbuilder");
+const INVOKE_RESPONSE_KEY = Symbol('invokeResponse');
 const { TeamsBot } = require("./teamsBot");
+const { SignInMiddleware } = require('./middleware')
 
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about adapters.
@@ -27,6 +29,7 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity(`The bot encountered an unhandled error:\n ${error.message}`);
   await context.sendActivity("To continue to run this bot, please fix the bot source code.");
 };
+adapter.use(new SignInMiddleware());
 
 // Create the bot that will handle incoming messages.
 const bot = new TeamsBot();
