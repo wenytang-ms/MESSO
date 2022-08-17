@@ -6,6 +6,7 @@ const rawLearnCard = require("./adaptiveCards/learn.json");
 const cardTools = require("@microsoft/adaptivecards-tools");
 const { TeamsFx, createMicrosoftGraphClient, ErrorWithCode, ErrorCode } = require('@microsoft/teamsfx')
 const { ResponseType } = require('@microsoft/microsoft-graph-client')
+const jwt_decode = require('jwt-decode');
 require('isomorphic-fetch');
 
 class TeamsBot extends TeamsActivityHandler {
@@ -123,7 +124,11 @@ class TeamsBot extends TeamsActivityHandler {
         this.teamsfx.setSsoToken(valueObj.authentication.token)
       }
       const credential = this.teamsfx.getCredential();
-      await credential.getToken("User.Read")
+      const token = await credential.getToken("User.Read")
+      const decoded = jwt_decode(token.token)
+      if(decoded.oid != context.activity.from.aadObjectId) {
+        return this.getSignInResponse();
+      }
     } catch (err) {
       if (err.code === ErrorCode.InvalidParameter) {
         return this.getSignInResponse();
